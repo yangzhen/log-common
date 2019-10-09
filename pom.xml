@@ -8,40 +8,35 @@
   <name>log-themis-server</name>
   <packaging>jar</packaging>
   <description>好未来日志通用拦截打印</description>
-  <repositories>
-    <repository>
-      <id>aliyun</id>
-      <name>aliyun</name>
-      <url>http://maven.aliyun.com/nexus/content/groups/public</url>
-    </repository>
-  </repositories>
   <properties>
     <java.version>1.8</java.version>
-    <spring.boot.version>2.1.4.RELEASE</spring.boot.version>
-    <druid.starter.version>1.1.18</druid.starter.version>
-    <spring.boot.mybatis>2.0.0</spring.boot.mybatis>
-    <spring-cloud.version>Greenwich.SR2</spring-cloud.version>
+    <spring.version>4.2.5.RELEASE</spring.version>
   </properties>
+
   <dependencies>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.25</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
       <version>1.2.16</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-api</artifactId>
+      <version>2.11.1</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
+      <version>2.11.1</version>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.aspectj</groupId>
@@ -56,21 +51,38 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
-      <version>4.2.5.RELEASE</version>
+      <version>${spring.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-aop</artifactId>
-      <version>4.2.5.RELEASE</version>
+      <version>${spring.version}</version>
+      <scope>provided</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+      <version>${spring.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-web</artifactId>
+      <version>${spring.version}</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
       <version>3.1.0</version>
       <scope>provided</scope>
     </dependency>
-
+    <dependency>
+      <groupId>com.alibaba</groupId>
+      <artifactId>fastjson</artifactId>
+      <version>1.2.61</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -80,61 +92,12 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.5</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
-
-      <plugin>
-        <!-- ${project.basedir}/target/site/jacoco/index.html -->
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.7.7.201606060606</version>
-        <configuration>
-          <!--指定生成 .exec 文件的存放位置-->
-          <destFile>target/coverage-reports/jacoco-unit.exec</destFile>
-          <!--Jacoco 是根据 .exec 文件生成最终的报告，所以需指定 .exec 的存放路径-->
-          <dataFile>target/coverage-reports/jacoco-unit.exec</dataFile>
-          <excludes>
-            <exclude>com/hwl/themis/server/bean/**/**.class</exclude>
-            <exclude>com/hwl/themis/server/web/**/**.class</exclude>
-          </excludes>
-        </configuration>
-        <executions>
-          <execution>
-            <id>jacoco-initialize</id>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>jacoco-site</id>
-            <phase>test</phase>
-            <goals>
-              <goal>report</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-
     </plugins>
   </build>
 
-  <profiles>
-
-    <profile>
-      <id>local</id>
-      <properties>
-        <apollo.meta>http://apollo.aibeike.com:8180</apollo.meta>
-        <apollo.appId>tal-themis</apollo.appId>
-        <apollo.bootstrap.enabled>false</apollo.bootstrap.enabled>
-      </properties>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-    </profile>
-
-  </profiles>
 </project>

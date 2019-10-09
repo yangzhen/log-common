@@ -4,17 +4,17 @@ package com.yxy.common;
  * @author yangxinyan
  * @date 2019/3/14 19:10
  */
-public class Context {
+public class ThemisContext {
 
-  private static final ThreadLocal<Context> THREAD_LOCAL = new ThreadLocal<>();
+  private static final ThreadLocal<ThemisContext> THREAD_LOCAL = new ThreadLocal<>();
 
   private long startTime;
   private String traceId;
-  private String clientId;
+  private String appName;
 
-  public static Context getOrNewInstance() {
+  public static ThemisContext getOrNewInstance() {
     if (THREAD_LOCAL.get() == null) {
-      Context context = new Context();
+      ThemisContext context = new ThemisContext();
       THREAD_LOCAL.set(context);
     }
     return THREAD_LOCAL.get();
@@ -40,12 +40,11 @@ public class Context {
     this.traceId = traceId;
   }
 
-  public String getClientId() {
-    return clientId;
+  public String getAppName() {
+    return appName;
   }
 
-  public void setClientId(String clientId) {
-    this.clientId = clientId;
+  public void setAppName(String appName) {
+    this.appName = appName;
   }
-
 }

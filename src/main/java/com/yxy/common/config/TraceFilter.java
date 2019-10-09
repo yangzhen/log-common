@@ -1,7 +1,7 @@
 package com.yxy.common.config;
 
-import com.yxy.common.AppConstant;
-import com.yxy.common.Context;
+import com.yxy.common.constants.AppConstant;
+import com.yxy.common.ThemisContext;
 import com.yxy.common.logger.Logger;
 import com.yxy.common.logger.LoggerFactory;
 import com.yxy.common.utils.RequestUtil;
@@ -15,6 +15,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author yangxinyan
@@ -22,43 +23,50 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class TraceFilter implements Filter {
 
-    private FilterConfig filterConfig = null;
+  private FilterConfig filterConfig = null;
 
-    private Logger logger = LoggerFactory.getLogger(TraceFilter.class);
+  private Logger log = LoggerFactory.getLogger(TraceFilter.class);
 
-    @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-        filterConfig = filterConfig;
+  private String appName;
+
+  @Override
+  public void init(FilterConfig filterConfig) throws ServletException {
+    filterConfig = filterConfig;
+    appName = filterConfig.getInitParameter(AppConstant.APP_NAME);
+  }
+
+  @Override
+  public void destroy() {
+    filterConfig = null;
+  }
+
+  @Override
+  public void doFilter(ServletRequest request, ServletResponse response,
+      FilterChain chain) throws IOException, ServletException {
+
+    HttpServletRequest requestWrapper = new RequestWrapper((HttpServletRequest) request);
+    HttpServletResponse httpServletResponse = (HttpServletResponse) response;
+
+    ThemisContext.getOrNewInstance().setStartTime(System.currentTimeMillis());
+
+    ThemisContext.getOrNewInstance().setAppName(appName);
+
+    String traceId = null;
+    if (StringUtils.isNotBlank(requestWrapper.getHeader(AppConstant.TRACE_ID))) {
+      traceId = requestWrapper.getHeader(AppConstant.TRACE_ID);
+    } else {
+      traceId = UUID.randomUUID().toString();
     }
+    ThemisContext.getOrNewInstance().setTraceId(traceId);
+    httpServletResponse.addHeader(AppConstant.TRACE_ID, traceId);
 
-    @Override
-    public void destroy() {
-        logger.info("##################### web context is destroy");
-        filterConfig = null;
+    try {
+      log.debug("======== Log TraceFilter start in,uri:" + requestWrapper.getRequestURI());
+      chain.doFilter(request, response);
+    } finally {
+      log.debug("======== Log TraceFilter end out,uri:" + requestWrapper.getRequestURI());
+      ThemisContext.getOrNewInstance().remove();
     }
+  }
 
-    @Override
-    public void doFilter(ServletRequest request, ServletResponse response,
-        FilterChain chain) throws IOException, ServletException {
-
-        Context.getOrNewInstance().setStartTime(System.currentTimeMillis());
-
-        String traceId = UUID.randomUUID().toString();
-        Context.getOrNewInstance().setTraceId(traceId);
-
-        HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-        HttpServletResponse httpServletResponse = (HttpServletResponse) response;
-        httpServletResponse.addHeader(AppConstant.TRACE_ID, traceId);
-
-        String clientId = RequestUtil.getIp(httpServletRequest);
-        Context.getOrNewInstance().setClientId(clientId);
-
-        try {
-            logger.debug("======== start in,uri:" + httpServletRequest.getRequestURI());
-            chain.doFilter(request, response);
-        } finally {
-            logger.debug("======== end out,uri:" + httpServletRequest.getRequestURI());
-            Context.getOrNewInstance().remove();
-        }
-    }
 }

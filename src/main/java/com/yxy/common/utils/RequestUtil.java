@@ -1,9 +1,8 @@
 package com.yxy.common.utils;
 
-import com.yxy.common.config.TraceFilter;
+import com.yxy.common.config.RequestWrapper;
 import com.yxy.common.logger.Logger;
 import com.yxy.common.logger.LoggerFactory;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;

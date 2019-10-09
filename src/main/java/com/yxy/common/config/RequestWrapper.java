@@ -1,4 +1,4 @@
-package com.yxy.common.utils;
+package com.yxy.common.config;
 
 import com.yxy.common.logger.Logger;
 import com.yxy.common.logger.LoggerFactory;
