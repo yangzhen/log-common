@@ -24,8 +24,8 @@ import java.util.regex.Pattern;
 /**
  * IP and Port Helper for RPC
  */
-public class NetUtils {
-    private static final Logger logger = LoggerFactory.getLogger(NetUtils.class);
+public class NetUtil {
+    private static final Logger logger = LoggerFactory.getLogger(NetUtil.class);
 
     // returned port range is [30000, 39999]
     private static final int RND_PORT_START = 30000;

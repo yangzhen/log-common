@@ -1,12 +1,11 @@
 package com.yxy.common.config;
 
 import com.yxy.common.constants.AppConstant;
-import com.yxy.common.ThemisContext;
 import com.yxy.common.logger.Logger;
 import com.yxy.common.logger.LoggerFactory;
-import com.yxy.common.utils.RequestUtil;
+import com.yxy.common.utils.ThemisUtill;
 import java.io.IOException;
-import java.util.UUID;
+import java.util.Optional;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -15,7 +14,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author yangxinyan
@@ -27,12 +25,9 @@ public class TraceFilter implements Filter {
 
   private Logger log = LoggerFactory.getLogger(TraceFilter.class);
 
-  private String appName;
-
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
     filterConfig = filterConfig;
-    appName = filterConfig.getInitParameter(AppConstant.APP_NAME);
   }
 
   @Override
@@ -49,15 +44,10 @@ public class TraceFilter implements Filter {
 
     ThemisContext.getOrNewInstance().setStartTime(System.currentTimeMillis());
 
-    ThemisContext.getOrNewInstance().setAppName(appName);
-
-    String traceId = null;
-    if (StringUtils.isNotBlank(requestWrapper.getHeader(AppConstant.TRACE_ID))) {
-      traceId = requestWrapper.getHeader(AppConstant.TRACE_ID);
-    } else {
-      traceId = UUID.randomUUID().toString();
-    }
+    String traceId = requestWrapper.getHeader(AppConstant.TRACE_ID);
+    traceId = Optional.ofNullable(traceId).orElse(ThemisUtill.getUUID());
     ThemisContext.getOrNewInstance().setTraceId(traceId);
+
     httpServletResponse.addHeader(AppConstant.TRACE_ID, traceId);
 
     try {

@@ -2,14 +2,16 @@ package com.yxy.common.aop;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.yxy.common.AppException;
 import com.yxy.common.RES_STATUS;
 import com.yxy.common.Result;
-import com.yxy.common.ThemisContext;
+import com.yxy.common.annoation.LogMapping;
 import com.yxy.common.bean.ThemisLog;
+import com.yxy.common.config.ClientConfigManager;
+import com.yxy.common.config.ThemisContext;
 import com.yxy.common.constants.AppConstant;
 import com.yxy.common.logger.Logger;
 import com.yxy.common.logger.LoggerFactory;
+import com.yxy.common.utils.AppException;
 import com.yxy.common.utils.RequestUtil;
 import java.lang.reflect.Method;
 import java.util.Date;
@@ -44,6 +46,15 @@ public class WebControllerAop {
 
   @AfterReturning(pointcut="shareCut()", returning = "retVal")
   public void around(JoinPoint jp, Object retVal) {
+
+    MethodInvocation mi = ExposeInvocationInterceptor.currentInvocation();
+    Method method = mi.getMethod();
+    LogMapping logMapping = method.getAnnotation(LogMapping.class);
+    if(logMapping != null) {
+      //交给其他代理处理
+      return;
+    }
+
     HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
     if(request == null) {
       return ;
@@ -62,6 +73,14 @@ public class WebControllerAop {
 
   @AfterThrowing(pointcut="shareCut()", throwing = "error")
   public void around(JoinPoint jp, Throwable error) {
+    MethodInvocation mi = ExposeInvocationInterceptor.currentInvocation();
+    Method method = mi.getMethod();
+    LogMapping logMapping = method.getAnnotation(LogMapping.class);
+    if(logMapping != null) {
+      //交给其他代理处理
+      return;
+    }
+
     HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
     if(request == null) {
       return ;
@@ -93,7 +112,7 @@ public class WebControllerAop {
     long cost = System.currentTimeMillis() - ThemisContext.getOrNewInstance().getStartTime();
     ThemisLog themisLog = new ThemisLog();
     themisLog.setTime(new Date());
-    themisLog.setAppName(AppConstant.APP_NAME);
+    themisLog.setAppName(ClientConfigManager.INSTANCE.getAppName());
     themisLog.setTraceId(ThemisContext.getOrNewInstance().getTraceId());
     themisLog.setClientIp(RequestUtil.getIp(request));
     themisLog.setMethod(request.getRequestURI());

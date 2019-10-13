@@ -1,4 +1,7 @@
-package com.yxy.common;
+package com.yxy.common.utils;
+
+
+import com.yxy.common.RES_STATUS;
 
 public class AppException extends RuntimeException {
 

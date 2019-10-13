@@ -2,7 +2,7 @@ package com.yxy.common.logger.support;
 
 
 import com.yxy.common.logger.Logger;
-import com.yxy.common.utils.NetUtils;
+import com.yxy.common.utils.NetUtil;
 
 public class FailsafeLogger implements Logger {
 
@@ -21,7 +21,7 @@ public class FailsafeLogger implements Logger {
     }
 
     private String appendContextMessage(String msg) {
-        return " [DUBBO] " + msg + ", current host: " + NetUtils.getLocalHost();
+        return " [DUBBO] " + msg + ", current host: " + NetUtil.getLocalHost();
     }
 
     @Override

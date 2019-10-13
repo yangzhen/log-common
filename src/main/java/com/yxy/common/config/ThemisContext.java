@@ -1,15 +1,13 @@
-package com.yxy.common;
+package com.yxy.common.config;
 
-/**
- * @author yangxinyan
- * @date 2019/3/14 19:10
- */
 public class ThemisContext {
 
   private static final ThreadLocal<ThemisContext> THREAD_LOCAL = new ThreadLocal<>();
 
-  private long startTime;
+  private Long startTime;
+
   private String traceId;
+
   private String appName;
 
   public static ThemisContext getOrNewInstance() {
@@ -24,11 +22,12 @@ public class ThemisContext {
     THREAD_LOCAL.remove();
   }
 
-  public long getStartTime() {
+
+  public Long getStartTime() {
     return startTime;
   }
 
-  public void setStartTime(long startTime) {
+  public void setStartTime(Long startTime) {
     this.startTime = startTime;
   }
 
