@@ -21,7 +21,7 @@ public class FailsafeLogger implements Logger {
     }
 
     private String appendContextMessage(String msg) {
-        return " [DUBBO] " + msg + ", current host: " + NetUtil.getLocalHost();
+        return " [log-sdk] " + msg + ", current host: " + NetUtil.getLocalHost();
     }
 
     @Override

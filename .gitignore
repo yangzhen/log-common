@@ -6,7 +6,7 @@
 *.Ds_store
 *.iml
 nirvana.iml
-.idea/
+.idea/*
 .logs*
 .catalina*
 .catalina.base_IS_UNDEFINED*
