@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.yxy.common.RES_STATUS;
 import com.yxy.common.Result;
 import com.yxy.common.annoation.LogMapping;
+import com.yxy.common.bean.LogVo;
 import com.yxy.common.bean.ThemisLog;
 import com.yxy.common.config.ClientConfigManager;
 import com.yxy.common.config.ThemisContext;
@@ -17,6 +18,7 @@ import java.lang.reflect.Method;
 import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
@@ -39,13 +41,19 @@ public class WebControllerAop {
 
   private static final Logger log = LoggerFactory.getLogger(WebControllerAop.class);
 
-  @Pointcut("@within(org.springframework.web.bind.annotation.RestController) or @within(org.springframework.web.bind.annotation.Controller)")
+  /**
+   * 拦截以Controller结尾类名的所有方法,标有@注解类的方法
+   */
+  @Pointcut("within(com..*.*Controller) or @within(org.springframework.stereotype.Controller)")
   public void shareCut() {
 
   }
 
   @AfterReturning(pointcut="shareCut()", returning = "retVal")
-  public void around(JoinPoint jp, Object retVal) {
+  public void webAfterReturning(JoinPoint jp, Object retVal) {
+    if(!ClientConfigManager.INSTANCE.getAppLog()) {
+      return;
+    }
 
     MethodInvocation mi = ExposeInvocationInterceptor.currentInvocation();
     Method method = mi.getMethod();
@@ -55,24 +63,46 @@ public class WebControllerAop {
       return;
     }
 
-    HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-    if(request == null) {
-      return ;
-    }
     Integer code = null;
-    if (retVal instanceof Result<?>) {
-      code = ((Result) retVal).getCode();
-    } else {
-      code = RES_STATUS.SUCCESS.code;
+    Boolean success = false;
+    String errorMessage = null;
+
+    try {
+      if (retVal instanceof Result<?>) {
+        Result<?> result = (Result<?>) retVal;
+        code = result.getCode();
+        success = result.getSuccess();
+        errorMessage = result.getMessage();
+      } else {
+        Object object = JSON.toJSON(retVal);
+        if(object instanceof JSONObject) {
+          JSONObject json = (JSONObject) object;
+          code = json.getInteger(AppConstant.CODE);
+          success = json.getBoolean(AppConstant.SUCCESS);
+          errorMessage = json.getString(AppConstant.MESSAGE);
+          if(StringUtils.isBlank(errorMessage)) {
+            errorMessage = json.getString(AppConstant.ERROR_MESSAGE);
+          }
+        } else {
+          code = RES_STATUS.SUCCESS.code;
+          success = true;
+          errorMessage = RES_STATUS.SUCCESS.msg;
+        }
+      }
+
+      pringThemisLogStat(retVal, code, success, errorMessage);
+    } catch (Exception e) {
+      log.error("themis skd core print log error", e);
     }
-
-    pringThemisLogStat(retVal, request, code);
-
     return ;
   }
 
   @AfterThrowing(pointcut="shareCut()", throwing = "error")
-  public void around(JoinPoint jp, Throwable error) {
+  public void webAfterThrowing(JoinPoint jp, Throwable error) {
+    if(!ClientConfigManager.INSTANCE.getAppLog()) {
+      return;
+    }
+
     MethodInvocation mi = ExposeInvocationInterceptor.currentInvocation();
     Method method = mi.getMethod();
     LogMapping logMapping = method.getAnnotation(LogMapping.class);
@@ -80,48 +110,54 @@ public class WebControllerAop {
       //交给其他代理处理
       return;
     }
-
-    HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-    if(request == null) {
-      return ;
-    }
+    HttpServletRequest request = ThemisContext.getOrNewInstance().getRequest();
     Integer code = null;
+    Boolean success = false;
+    String errorMessage = error.getMessage();
     if (error instanceof AppException) {
       code = ((AppException) error).getCode();
     } else {
       code = RES_STATUS.SERVER_UNKONW_ERROR.code;
     }
 
-    pringThemisLogStat(null,request, code);
+    try {
+      pringThemisLogStat(null, code, success, errorMessage);
+    } catch (Exception e) {
+      log.error("themis skd core print log error", e);
+    }
 
     return ;
   }
 
-  private void pringThemisLogStat(Object retVal, HttpServletRequest request, Integer code) {
-    if(log.isDebugEnabled()) {
-      MethodInvocation mi = ExposeInvocationInterceptor.currentInvocation();
-      Method method = mi.getMethod();
-      log.debug("拦截打印方法,method:" + method.toString());
-    }
+  private void pringThemisLogStat(Object retval, Integer code, Boolean success, String errorMessage) {
+    HttpServletRequest request = ThemisContext.getOrNewInstance().getRequest();
 
-    JSONObject json = new JSONObject();
-    json.put("request", RequestUtil.getHttpParameter(request));
-    json.put("requestBody", RequestUtil.getRequestBody(request));
-    json.put("response", retVal);
+    LogVo logVo = new LogVo();
+    Long startTime = ThemisContext.getOrNewInstance().getStartTime();
+    logVo.setIp(RequestUtil.getIp(request));
+    logVo.setTraceId(ThemisContext.getOrNewInstance().getTraceId());
+    logVo.setPath(request.getRequestURI());
+    logVo.setStartTime(new Date(startTime));
+    logVo.setEndTime(new Date());
 
     long cost = System.currentTimeMillis() - ThemisContext.getOrNewInstance().getStartTime();
-    ThemisLog themisLog = new ThemisLog();
-    themisLog.setTime(new Date());
-    themisLog.setAppName(ClientConfigManager.INSTANCE.getAppName());
-    themisLog.setTraceId(ThemisContext.getOrNewInstance().getTraceId());
-    themisLog.setClientIp(RequestUtil.getIp(request));
-    themisLog.setMethod(request.getRequestURI());
-    themisLog.setCost(cost);
-    themisLog.setBusinessLog(json);
-    themisLog.setCode(code);
-    themisLog.setSuccess(code == RES_STATUS.SUCCESS.code);
+    logVo.setExecuteTime(cost);
 
-    stat.info(JSON.toJSONString(themisLog));
+    logVo.setSystemName(ClientConfigManager.INSTANCE.getAppName());
+    logVo.setErrorMessage(errorMessage);
+
+    JSONObject requestParam = new JSONObject();
+    requestParam.putAll(RequestUtil.getHttpParameter(request));
+    JSONObject requestBody = JSONObject.parseObject(RequestUtil.getRequestBody(request));
+    if(requestBody != null) {
+      requestParam.putAll(requestBody);
+    }
+    logVo.setParams(requestParam);
+
+    logVo.setCode(code);
+    logVo.setSuccess(success);
+
+    stat.info(JSON.toJSONString(logVo));
   }
 
 }

@@ -16,17 +16,17 @@ public enum RES_STATUS {
 
   ;
 
-  public final int code;
+  public final Integer code;
   public final String msg;
 
-  RES_STATUS(int code, String msg) {
+  RES_STATUS(Integer code, String msg) {
     this.code = code;
     this.msg = msg;
   }
 
-  public static RES_STATUS findStatusByCode(int code) {
+  public static RES_STATUS findStatusByCode(Integer code) {
     for (RES_STATUS status : RES_STATUS.values()) {
-      if (status.code == code) {
+      if (status.code.intValue() == code.intValue()) {
         return status;
       }
     }

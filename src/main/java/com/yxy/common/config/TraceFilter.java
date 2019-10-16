@@ -14,6 +14,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author yangxinyan
@@ -41,15 +42,19 @@ public class TraceFilter implements Filter {
 
     HttpServletRequest requestWrapper = new RequestWrapper((HttpServletRequest) request);
     HttpServletResponse httpServletResponse = (HttpServletResponse) response;
+    ThemisContext.getOrNewInstance().setRequest(requestWrapper);
 
     ThemisContext.getOrNewInstance().setStartTime(System.currentTimeMillis());
 
     String traceId = requestWrapper.getHeader(AppConstant.TRACE_ID);
-    traceId = Optional.ofNullable(traceId).orElse(ThemisUtill.getUUID());
+    if(StringUtils.isBlank(traceId)) {
+      traceId = ThemisUtill.getUUID();
+    }
     ThemisContext.getOrNewInstance().setTraceId(traceId);
 
-    httpServletResponse.addHeader(AppConstant.TRACE_ID, traceId);
 
+
+    httpServletResponse.addHeader(AppConstant.TRACE_ID, traceId);
     try {
       log.debug("======== Log TraceFilter start in,uri:" + requestWrapper.getRequestURI());
       chain.doFilter(request, response);

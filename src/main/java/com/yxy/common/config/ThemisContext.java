@@ -1,5 +1,7 @@
 package com.yxy.common.config;
 
+import javax.servlet.http.HttpServletRequest;
+
 public class ThemisContext {
 
   private static final ThreadLocal<ThemisContext> THREAD_LOCAL = new ThreadLocal<>();
@@ -9,6 +11,8 @@ public class ThemisContext {
   private String traceId;
 
   private String appName;
+
+  private HttpServletRequest request;
 
   public static ThemisContext getOrNewInstance() {
     if (THREAD_LOCAL.get() == null) {
@@ -45,5 +49,13 @@ public class ThemisContext {
 
   public void setAppName(String appName) {
     this.appName = appName;
+  }
+
+  public HttpServletRequest getRequest() {
+    return request;
+  }
+
+  public void setRequest(HttpServletRequest request) {
+    this.request = request;
   }
 }

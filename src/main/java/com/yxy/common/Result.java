@@ -9,14 +9,19 @@ public class Result<T> {
   private T data;
 
   /**
+   * 请求是否成功
+   */
+  private Boolean success;
+
+  /**
    * 返回状态码
    */
-  private int code = RES_STATUS.FAILED.code;
+  private Integer code = RES_STATUS.FAILED.code;
 
   /**
    * 返回消息
    */
-  private String msg = RES_STATUS.FAILED.msg;
+  private String message = RES_STATUS.FAILED.msg;
 
 
   public Result() {
@@ -26,24 +31,24 @@ public class Result<T> {
   public Result(RES_STATUS status) {
     super();
     this.code = status.code;
-    this.msg = status.msg;
+    this.message = status.msg;
   }
 
-  public Result(int code, String msg) {
+  public Result(Integer code, String message) {
     super();
     this.code = code;
-    this.msg = msg;
+    this.message = message;
   }
 
-  public Result(T data, int code, String msg) {
+  public Result(T data, Integer code, String message) {
     super();
     this.data = data;
     this.code = code;
-    this.msg = msg;
+    this.message = message;
   }
 
-  public static <T> Result<T> error(int code, String msg) {
-    return new Result<>(code, msg);
+  public static <T> Result<T> error(Integer code, String message) {
+    return new Result<>(code, message);
   }
 
   public static <T> Result<T> error(RES_STATUS status) {
@@ -60,11 +65,7 @@ public class Result<T> {
 
   public void setStatus(RES_STATUS status) {
     this.code = status.code;
-    this.msg = status.msg;
-  }
-
-  public boolean isSuccess() {
-    return this.code == RES_STATUS.SUCCESS.code;
+    this.message = status.msg;
   }
 
   public T getData() {
@@ -83,27 +84,28 @@ public class Result<T> {
     this.code = code;
   }
 
-  public String getMsg() {
-    return this.msg;
+  public Boolean getSuccess() {
+    return RES_STATUS.SUCCESS.code.equals(this.code);
   }
 
-  public void setMsg(String msg) {
-    this.msg = msg;
+  public void setCode(Integer code) {
+    this.code = code;
+  }
+
+  public String getMessage() {
+    return message;
+  }
+
+  public void setMessage(String message) {
+    this.message = message;
   }
 
   /**
    * 服务器unix utc时间戳秒值
+   *
+   * @return
    */
   public long getTimestamp() {
     return System.currentTimeMillis() / 1000;
-  }
-
-  @Override
-  public String toString() {
-    return "Result{" +
-        "data=" + data +
-        ", code=" + code +
-        ", msg='" + msg + '\'' +
-        '}';
   }
 }

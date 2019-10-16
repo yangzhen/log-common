@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
  * @author yangxinyan
  * @date 2019/10/12 22:15
  */
-@Target({ElementType.METHOD})
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface LogMapping {
